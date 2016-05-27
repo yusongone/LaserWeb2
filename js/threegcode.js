@@ -65,21 +65,21 @@ $(document).ready(function() {
 
 
         if (typeof(inflateGrp) != 'undefined' && inflateGrp != null) {
-            console.log('looks like we are generating gcode for a Offset Path');
+            //console.log('looks like we are generating gcode for a Offset Path');
             pwr0 = $('#pwr0').val();
             cutSpeed0 = $('#sp0').val();
             rapidSpeed = document.getElementById('rapidspeed').value;
             g += generateGcode(inflateGrp, cutSpeed0, pwr0, rapidSpeed, laseron, laseroff);
 
         } else if (typeof(slicegroup) != 'undefined') {
-            console.log('looks like we are generating gcode for a STL Slice Path');
+            //console.log('looks like we are generating gcode for a STL Slice Path');
             pwr0 = $('#pwr0').val();
             cutSpeed0 = $('#sp0').val();
             rapidSpeed = document.getElementById('rapidspeed').value;
             g += generateGcode(slicegroup, cutSpeed0, pwr0, rapidSpeed, laseron, laseroff);
 
         } else if (typeof(dxf2) != 'undefined') {
-            console.log('looks like we are generating gcode for a DXF');
+            //console.log('looks like we are generating gcode for a DXF');
             for (var c = 0; c < dxf2.entities.length; c++) {
                 var lay = layers.indexOf(dxf2.entities[c].layer);
                 console.log('Layer', lay);
@@ -127,13 +127,11 @@ var options = {};
 
 
 function generateGcode(threeGroup, cutSpeed, laserPwr, rapidSpeed, laseron, laseroff) {
+    console.log("888888888888888888888888",laseron);
+    laseron="M3 S255";
+    laseroff="M5";
 
     var laserPwrVal = 0.0;
-    console.log('inside generateGcodeCallback')
-    console.log('Group', threeGroup);
-    console.log('CutSpeed', cutSpeed);
-    console.log('RapidSpeed', rapidSpeed);
-    console.log('Laser Power %', laserPwr);
     var lasermultiply = $('#lasermultiply').val();
     console.log('Laser Multiplier', lasermultiply);
 
@@ -144,7 +142,7 @@ function generateGcode(threeGroup, cutSpeed, laserPwr, rapidSpeed, laseron, lase
         var laserPwrVal = laserPwr * (lasermultiply / 100);
         laserPwrVal = laserPwrVal.toFixed(0);
     }
-    console.log('Laser Power Value', laserPwrVal, ' type of ', typeof(laserPwrVal));
+    laserPwrVal = 255;
 
     //  options["pointsperpath"] = 1;
     //  options["holes"] = 0;
@@ -170,9 +168,6 @@ function generateGcode(threeGroup, cutSpeed, laserPwr, rapidSpeed, laseron, lase
     var isSeekrateSpecifiedAlready = false;
     var subj_paths = [];
     var subj_path2 = [];
-    console.log(txtGrp);
-    console.log(rapidSpeed)
-    console.log(cutSpeed);
 
     txtGrp.traverse(function(child) {
         //console.log(child);
@@ -213,7 +208,6 @@ function generateGcode(threeGroup, cutSpeed, laserPwr, rapidSpeed, laseron, lase
                     if (isSeekrateSpecifiedAlready) {
                         seekrate = "";
                     } else {
-                        console.log('Rapid Speed: ', rapidSpeed);
                         if (rapidSpeed) {
                             seekrate = " F" + rapidSpeed;
                             isSeekrateSpecifiedAlready = true;
@@ -257,6 +251,7 @@ function generateGcode(threeGroup, cutSpeed, laserPwr, rapidSpeed, laseron, lase
                             };
                             isLaserOn = true;
                         }
+                        console.log("llllllllllllllllllll",isLaserOn,laseron);
                         // }
                     } else {
                         // this is milling. if we are not at depth cut
@@ -270,7 +265,6 @@ function generateGcode(threeGroup, cutSpeed, laserPwr, rapidSpeed, laseron, lase
                     if (isFeedrateSpecifiedAlready) {
 
                     } else {
-                        console.log('Cut Speed: ', cutSpeed);
                         if (cutSpeed) {
                             feedrate = " F" + cutSpeed;
                             isFeedrateSpecifiedAlready = true;
@@ -281,7 +275,7 @@ function generateGcode(threeGroup, cutSpeed, laserPwr, rapidSpeed, laseron, lase
                     }
                     //console.log('World', worldPt);
                     //console.log('Local', localPt);
-                    g += "G1" + feedrate;
+                    g += "G1" + "F"+5000;//feedrate;
                     g += " X" + xpos;
                     g += " Y" + ypos;
                     g += " S" + laserPwrVal + "\n";
@@ -320,7 +314,6 @@ function generateGcode(threeGroup, cutSpeed, laserPwr, rapidSpeed, laseron, lase
         }
     });
 
-    console.log("generated gcode. length:", g.length);
 
     isGcodeInRegeneratingState = false;
 
@@ -329,7 +322,6 @@ function generateGcode(threeGroup, cutSpeed, laserPwr, rapidSpeed, laseron, lase
 };
 
 onInflateChange = function(evt) {
-    console.log("onInflateChange. evt:");
 
     options["pointsperpath"] = 1;
     options["holes"] = 0;
@@ -350,7 +342,6 @@ onInflateChange = function(evt) {
     }
 
     if (options.inflate != 0) {
-        console.log("user wants to inflate. val:", options.inflate);
 
         fileParentGroup.updateMatrix();
 
@@ -359,10 +350,8 @@ onInflateChange = function(evt) {
         var clipperPaths = [];
 
         grp.traverse(function(child) {
-            console.log('Traverse: ', child)
 
             if (child.name == "inflatedGroup") {
-                console.log("this is the inflated path from a previous run. ignore.");
                 return;
             } else if (child.type == "Line") {
                 // let's inflate the path for this line. it may not be closed
@@ -387,11 +376,9 @@ onInflateChange = function(evt) {
             } else if (child.type == "Points") {
                 child.visible = false;
             } else {
-                console.log("type of ", child.type, " being skipped");
             }
         });
 
-        console.log("clipperPaths:", clipperPaths);
 
         // simplify this set of paths which is a very powerful Clipper call that
         // figures out holes and path orientations
@@ -409,7 +396,6 @@ onInflateChange = function(evt) {
         inflateGrp.name = 'inflateGrp';
 
         var hScale = ($("#scaleFactor").val() / 100);
-        console.log('Scaling to ', hScale);
         inflateGrp.scale.x = hScale;
 
         if (yflip == true) {
@@ -425,12 +411,10 @@ onInflateChange = function(evt) {
 };
 
 simplifyPolygons = function(paths) {
-    console.log('Simplifying: ', paths)
     var scale = 10000;
     ClipperLib.JS.ScaleUpPaths(paths, scale);
 
     var newClipperPaths = ClipperLib.Clipper.SimplifyPolygons(paths, ClipperLib.PolyFillType.pftEvenOdd);
-    console.log('Simplified: ', newClipperPaths)
 
     // scale back down
     ClipperLib.JS.ScaleDownPaths(newClipperPaths, scale);
@@ -460,7 +444,6 @@ getInflatePath = function(paths, delta, joinType) {
 };
 
 drawClipperPaths = function(paths, color, opacity, z, zstep, isClosed, isAddDirHelper, name) {
-    console.log("drawClipperPaths");
 
 
     var lineUnionMat = new THREE.LineBasicMaterial({

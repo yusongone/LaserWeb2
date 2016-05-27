@@ -26,7 +26,6 @@ $(document).ready(function() {
     macrosInit();
     svgInit();
     grbl = new Grbl();
-
     //initRaster();
 
     // Responsive Sidebar width
@@ -236,7 +235,6 @@ function checkNumPad() {
 errorHandlerJS = function() {
     window.onerror = function(message, url, line) {
         message = message.replace(/^Uncaught /i, "");
-        //alert(message+"\n\n("+url+" line "+line+")");
         console.log(message + "\n\n(" + url + " line " + line + ")");
         if (message.indexOf('updateMatrixWorld') == -1 ) { // Ignoring threejs/google api messages, add more || as discovered
             printLog(message + "\n(" + url + " on line " + line + ")", errorcolor);
